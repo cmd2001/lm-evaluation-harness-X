@@ -105,6 +105,7 @@ class HFLM_Quant(TemplateLM):
             axis_key=kwargs.pop("axis_key"),
             axis_value=kwargs.pop("axis_value"),
             device=device,
+            compute_dtype=get_dtype(dtype),
         )
         # optionally: take in an already-initialized transformers.PreTrainedModel
         if not isinstance(pretrained, str):
