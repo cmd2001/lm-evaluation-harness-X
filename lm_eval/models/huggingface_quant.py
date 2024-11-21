@@ -94,7 +94,7 @@ class HFLM_Quant(TemplateLM):
     ) -> None:
         super().__init__()
         # check quant config
-        # print(kwargs)
+        print(kwargs)
         self.model_cache_dir = kwargs.pop("model_cache_dir", "./models_storage")
         self.kvcache_quant_config = FlexibleQuantizedCacheConfig(
             nbits_key=kwargs.pop("nbits_key"),
@@ -106,7 +106,9 @@ class HFLM_Quant(TemplateLM):
             axis_value=kwargs.pop("axis_value"),
             device=device,
             compute_dtype=get_dtype(dtype),
+            force_quant=kwargs.pop("force_quant", False),
         )
+        # print(self.kvcache_quant_config)
         # optionally: take in an already-initialized transformers.PreTrainedModel
         if not isinstance(pretrained, str):
             eval_logger.warning(
@@ -864,15 +866,19 @@ class HFLM_Quant(TemplateLM):
         logits returned from the model's decoder
         """
         with torch.no_grad():
+            past_key_values = FlexibleHQQQuantizedCache(self.kvcache_quant_config)
             if attn_mask is not None or labels is not None:
                 assert attn_mask is not None and labels is not None
                 assert self.AUTO_MODEL_CLASS == transformers.AutoModelForSeq2SeqLM
                 return self.model(
-                    input_ids=inps, attention_mask=attn_mask, labels=labels
+                    input_ids=inps, attention_mask=attn_mask, labels=labels,
+                    past_key_values=past_key_values, use_cache=True
                 ).logits
             else:
                 assert self.AUTO_MODEL_CLASS == transformers.AutoModelForCausalLM
-                return self.model(inps).logits
+                return self.model(inps,
+                    past_key_values=past_key_values, use_cache=True
+                ).logits
 
     def _model_generate(self, context, max_length, stop, **generation_kwargs):
         # temperature = 0.0 if not set
@@ -893,6 +899,7 @@ class HFLM_Quant(TemplateLM):
             self.tokenizer, stop, context.shape[1], context.shape[0]
         )
         past_key_values = FlexibleHQQQuantizedCache(self.kvcache_quant_config)
+        # print('RUNNING MODEL.GENERATE')
         return self.model.generate(
             input_ids=context,
             max_length=max_length,
