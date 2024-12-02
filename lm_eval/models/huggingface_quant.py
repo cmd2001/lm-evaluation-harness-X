@@ -108,6 +108,7 @@ class HFLM_Quant(TemplateLM):
             compute_dtype=get_dtype(dtype),
             force_quant=kwargs.pop("force_quant", False),
         )
+        self.quantilizer = kwargs.pop("quantilizer", "hqq")
         # print(self.kvcache_quant_config)
         # optionally: take in an already-initialized transformers.PreTrainedModel
         if not isinstance(pretrained, str):
@@ -866,7 +867,7 @@ class HFLM_Quant(TemplateLM):
         logits returned from the model's decoder
         """
         with torch.no_grad():
-            past_key_values = FlexibleHQQQuantizedCache(self.kvcache_quant_config)
+            past_key_values = FlexibleHQQQuantizedCache(self.kvcache_quant_config) if self.quantilizer == "hqq" else FlexibleVanillaQuantizedCache(self.kvcache_quant_config)
             if attn_mask is not None or labels is not None:
                 assert attn_mask is not None and labels is not None
                 assert self.AUTO_MODEL_CLASS == transformers.AutoModelForSeq2SeqLM
@@ -898,7 +899,7 @@ class HFLM_Quant(TemplateLM):
         stopping_criteria = stop_sequences_criteria(
             self.tokenizer, stop, context.shape[1], context.shape[0]
         )
-        past_key_values = FlexibleHQQQuantizedCache(self.kvcache_quant_config)
+        past_key_values = FlexibleHQQQuantizedCache(self.kvcache_quant_config) if self.quantilizer == "hqq" else FlexibleVanillaQuantizedCache(self.kvcache_quant_config)
         # print('RUNNING MODEL.GENERATE')
         return self.model.generate(
             input_ids=context,
