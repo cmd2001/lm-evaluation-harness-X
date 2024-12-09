@@ -109,6 +109,8 @@ class HFLM_Quant(TemplateLM):
             force_quant=kwargs.pop("force_quant", False),
             per_head_quant=kwargs.pop("per_head_quant", False),
             per_head_config_path=kwargs.pop("per_head_config_path", None),
+            per_layer_quant=kwargs.pop("per_layer_quant", False),
+            per_layer_config_path=kwargs.pop("per_layer_config_path", None),
         )
         self.quantilizer = kwargs.pop("quantilizer", "hqq")
         # print(self.kvcache_quant_config)
