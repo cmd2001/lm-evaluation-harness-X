@@ -38,8 +38,8 @@ from lm_eval.models.utils import (
 )
 from flexible_quant.flexible_quantized_cache import FlexibleQuantizedCacheConfig, FlexibleHQQQuantizedCache, FlexibleVanillaQuantizedCache
 
-
-eval_logger = utils.eval_logger
+import logging
+eval_logger = logging.getLogger(__name__)
 
 
 @register_model("hf-auto-quant", "hf-quant", "huggingface-quant")
