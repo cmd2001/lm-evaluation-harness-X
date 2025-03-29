@@ -129,7 +129,13 @@ def classification_score(
 ) -> float:
     prediction, ground_truth = predictions[0], references[0]
     em_match_list = []
-    all_classes = kwargs["all_classes"]
+    # all_classes = kwargs["all_classes"]
+    # workaround for the case when all_classes is not passed
+    # in the kwargs
+    if "all_classes" in kwargs:
+        all_classes = kwargs["all_classes"]
+    else:
+        all_classes = [ground_truth]
     for class_name in all_classes:
         if class_name in prediction:
             em_match_list.append(class_name)
